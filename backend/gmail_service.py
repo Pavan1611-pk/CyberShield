@@ -25,6 +25,12 @@ TOKEN_FILE = os.path.join(BASE_DIR, "token.json")
 CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")
 STATE_CACHE_FILE = os.path.join(BASE_DIR, ".oauth_states.json")
 
+#Google auth URL
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI",
+    "http://localhost:8000/api/gmail/oauth2callback"
+)   
+
 OAUTH_STATES: Dict[str, str] = {}
 
 if not os.path.exists(CREDENTIALS_FILE):
@@ -77,18 +83,36 @@ def _get_state_verifier(state: Optional[str]) -> Optional[str]:
     return None
 
 def get_client_config() -> Optional[Dict[str, Any]]:
-    """Retrieve client config from credentials.json or environment variables."""
+    """Retrieve Google OAuth configuration."""
+
+    config = None
+
+    # Load credentials.json if available
     if os.path.exists(CREDENTIALS_FILE):
         try:
             with open(CREDENTIALS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                config = json.load(f)
         except Exception:
             pass
-            
+
+    # Environment variables
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
-    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/gmail/oauth2callback")
-    
+
+    redirect_uri = GOOGLE_REDIRECT_URI
+
+    # If credentials.json exists
+    if config:
+        web = config.get("web", {})
+
+        # Override redirect URI for deployment
+        web["redirect_uris"] = [redirect_uri]
+
+        config["web"] = web
+
+        return config
+
+    # Otherwise use environment variables
     if client_id and client_secret:
         return {
             "web": {
@@ -99,7 +123,9 @@ def get_client_config() -> Optional[Dict[str, Any]]:
                 "redirect_uris": [redirect_uri]
             }
         }
+
     return None
+            
 
 def get_credentials() -> Optional[Credentials]:
     """Load credentials and refresh automatically if expired."""
@@ -134,7 +160,7 @@ def is_gmail_connected() -> Dict[str, Any]:
         
     return {"connected": False, "email": None}
 
-def create_oauth_flow(redirect_uri: str = "http://localhost:8000/api/gmail/oauth2callback", state: Optional[str] = None) -> Flow:
+def create_oauth_flow(redirect_uri: str = GOOGLE_REDIRECT_URI, state: Optional[str] = None) -> Flow:
     """Create OAuth 2.0 flow instance."""
     config = get_client_config()
     if not config:
@@ -145,7 +171,7 @@ def create_oauth_flow(redirect_uri: str = "http://localhost:8000/api/gmail/oauth
     flow = Flow.from_client_config(config, scopes=SCOPES, redirect_uri=redirect_uri, state=state)
     return flow
 
-def get_auth_url(redirect_uri: str = "http://localhost:8000/api/gmail/oauth2callback") -> str:
+def get_auth_url(redirect_uri: str = GOOGLE_REDIRECT_URI) -> str:
     """Generate Google authorization consent URL with PKCE tracking."""
     flow = create_oauth_flow(redirect_uri)
     auth_url, state = flow.authorization_url(
@@ -159,7 +185,7 @@ def get_auth_url(redirect_uri: str = "http://localhost:8000/api/gmail/oauth2call
 def exchange_code_for_token(
     code: str,
     state: Optional[str] = None,
-    redirect_uri: str = "http://localhost:8000/api/gmail/oauth2callback"
+    redirect_uri: str = GOOGLE_REDIRECT_URI
 ) -> Credentials:
     """Exchange authorization code for tokens, restoring PKCE code_verifier, and save to token.json."""
     flow = create_oauth_flow(redirect_uri, state=state)
