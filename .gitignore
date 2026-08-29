@@ -1,0 +1,20 @@
+﻿# Environment & Secrets (NEVER COMMIT)
+.env
+credentials.json
+token.json
+
+# Database
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# Uploads & logs
+uploads/
+*.log
+

@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield — Threat Investigation Report</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
+          <div class="shield-icon">🛡️</div>
+          <div>
+            <h1 class="logo-title">CyberShield</h1>
+            <p class="logo-subtitle">Proactive Scam & Phishing Detection Assistant</p>
+          </div>
+        </a>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="btn btn-secondary">
+          <span class="btn-icon">⬅️</span> Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Threat Detail Main Container -->
+  <main class="main-container" style="max-width: 900px;">
+    
+    <!-- Threat Banner -->
+    <div class="threat-detail-header-card">
+      <div class="threat-badge-row">
+        <span id="detailThreatIdPill" class="threat-id-pill">THREAT ID: Loading...</span>
+        <span id="detailRiskBadge" class="risk-pill high">ANALYZING</span>
+      </div>
+      <h2 id="detailSubject" class="threat-title-large">Loading Threat Investigation Report...</h2>
+      <div class="threat-meta-bar">
+        <div><strong>Sender:</strong> <span id="detailSender">Loading...</span></div>
+        <div><strong>Received Date:</strong> <span id="detailDate">N/A</span></div>
+        <div><strong>Analyzed At:</strong> <span id="detailScannedAt">Just now</span></div>
+      </div>
+    </div>
+
+    <!-- Risk Score Gauge Card -->
+    <div id="detailScoreBanner" class="score-banner high" style="margin-bottom: 24px;">
+      <div class="score-number-box">
+        <span id="detailScoreVal" class="score-number">--</span>
+        <span class="score-denom">/ 100</span>
+      </div>
+      <div class="score-desc">
+        <h4 id="detailRiskHeading">THREAT RISK ASSESSMENT</h4>
+        <p id="detailRiskSummary">Analyzing email headers, body content, social engineering patterns, and embedded links.</p>
+      </div>
+    </div>
+
+    <!-- Section 1: Why Was This Flagged? (Evidence) -->
+    <section class="analysis-section" style="margin-bottom: 20px;">
+      <h3 class="section-title">
+        <span class="section-icon">⚠️</span> WHY WAS THIS FLAGGED? (Threat Indicators)
+      </h3>
+      <ul id="detailEvidenceList" class="evidence-list">
+        <li>Analyzing indicators...</li>
+      </ul>
+    </section>
+
+    <!-- Section 2: Detected Suspicious URLs & Domain Analysis -->
+    <section class="analysis-section" style="margin-bottom: 20px;">
+      <h3 class="section-title">
+        <span class="section-icon">🔗</span> SUSPICIOUS LINKS & DOMAIN ANOMALIES
+      </h3>
+      <div id="detailUrlContainer" class="url-analysis-container">
+        <p style="color: #9ca3af; font-size: 0.85rem;">Scanning embedded hyperlinks...</p>
+      </div>
+    </section>
+
+    <!-- Section 3: Extracted Message Snippet -->
+    <section class="analysis-section" style="margin-bottom: 20px;">
+      <h3 class="section-title">
+        <span class="section-icon">📄</span> EMAIL CONTENT SNIPPET
+      </h3>
+      <div class="snippet-preview-box" id="detailSnippet">
+        Loading preview snippet...
+      </div>
+    </section>
+
+    <!-- Section 4: Recommended Safety Actions -->
+    <section class="analysis-section recommendations-box" style="margin-bottom: 24px;">
+      <h3 class="section-title text-success">
+        <span class="section-icon">🛡️</span> RECOMMENDED ACTION (Safe Steps)
+      </h3>
+      <ul id="detailRecommendationsList" class="recommendations-list">
+        <li>Loading actionable guidance...</li>
+      </ul>
+    </section>
+
+    <!-- Action Bar -->
+    <div class="detail-action-bar">
+      <a href="/" class="btn btn-secondary">
+        <span>⬅️</span> Back to Dashboard
+      </a>
+      <button id="detailReportBtn" class="btn btn-danger">
+        <span>🚨</span> Report Threat to Registry
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    // Threat Details Page Client Script
+    document.addEventListener("DOMContentLoaded", () => {
+      // 1. Extract threat_id from URL path /threat/{threat_id} or query param ?id=...
+      let threatId = null;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("id")) {
+        threatId = urlParams.get("id");
+      } else {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart && lastPart !== "threat" && lastPart !== "threat.html" && lastPart !== "threat_detail.html") {
+          threatId = lastPart;
+        }
+      }
+
+      if (!threatId) {
+        showErrorState("No Threat ID provided in the URL.");
+        return;
+      }
+
+      loadThreatDetails(threatId);
+
+      document.getElementById("detailReportBtn").addEventListener("click", () => {
+        showToast("Threat telemetry reported to CyberShield defensive registry!", "success");
+      });
+    });
+
+    async function loadThreatDetails(threatId) {
+      try {
+        const res = await fetch(`/api/threats/${threatId}`);
+        if (!res.ok) {
+          throw new Error(`Threat record #${threatId} not found in database.`);
+        }
+        const data = await res.json();
+        renderThreatDetails(data);
+      } catch (err) {
+        showErrorState(err.message);
+      }
+    }
+
+    function showErrorState(errorMessage) {
+      document.getElementById("detailThreatIdPill").textContent = "THREAT NOT FOUND";
+      document.getElementById("detailRiskBadge").className = "risk-pill low";
+      document.getElementById("detailRiskBadge").textContent = "UNKNOWN";
+      document.getElementById("detailSubject").textContent = "Threat Record Not Found";
+      document.getElementById("detailScoreVal").textContent = "0";
+      document.getElementById("detailRiskHeading").textContent = "Record Unavailable";
+      document.getElementById("detailRiskSummary").textContent = errorMessage;
+      document.getElementById("detailEvidenceList").innerHTML = "<li>No evidence records found for this identifier.</li>";
+      document.getElementById("detailUrlContainer").innerHTML = "<p style='color: #9ca3af; font-size: 0.85rem;'>No links found.</p>";
+      document.getElementById("detailSnippet").textContent = "The requested threat ID does not exist or has been cleared from local storage.";
+      document.getElementById("detailRecommendationsList").innerHTML = "<li>Return to dashboard to view active inbox scans.</li>";
+      showToast(errorMessage, "error");
+    }
+
+    function renderThreatDetails(data) {
+      const level = (data.risk_level || "LOW").toUpperCase();
+      const levelClass = level.toLowerCase();
+
+      document.getElementById("detailThreatIdPill").textContent = `THREAT ID: ${data.threat_id || ("#CS-" + data.id)}`;
+      document.getElementById("detailRiskBadge").className = `risk-pill ${levelClass}`;
+      document.getElementById("detailRiskBadge").textContent = `${level} RISK`;
+
+      document.getElementById("detailSubject").textContent = data.subject || "No Subject";
+      document.getElementById("detailSender").textContent = data.sender || "Unknown Sender";
+      document.getElementById("detailDate").textContent = data.date_received || "Recent";
+      document.getElementById("detailScannedAt").textContent = data.scanned_at ? data.scanned_at.substring(0, 19).replace('T', ' ') : (data.created_at ? data.created_at.substring(0, 19).replace('T', ' ') : "N/A");
+
+      document.getElementById("detailScoreBanner").className = `score-banner ${levelClass}`;
+      document.getElementById("detailScoreVal").textContent = data.risk_score;
+
+      if (level === "HIGH") {
+        document.getElementById("detailRiskHeading").textContent = "🚨 CRITICAL SCAM / PHISHING THREAT DETECTED";
+        document.getElementById("detailRiskSummary").textContent = "CyberShield automatically detected severe urgent panic pressure, credential harvesting, or deceptive links.";
+      } else if (level === "MEDIUM") {
+        document.getElementById("detailRiskHeading").textContent = "⚠️ SUSPICIOUS PATTERNS DETECTED";
+        document.getElementById("detailRiskSummary").textContent = "Potential sender discrepancy or unverified external links requiring user caution.";
+      } else {
+        document.getElementById("detailRiskHeading").textContent = "✅ NO CRITICAL THREATS DETECTED";
+        document.getElementById("detailRiskSummary").textContent = "Content matches standard digital communication patterns.";
+      }
+
+      // Evidence list (Threat indicators)
+      const evidenceList = document.getElementById("detailEvidenceList");
+      evidenceList.innerHTML = "";
+      if (data.evidence && data.evidence.length > 0) {
+        data.evidence.forEach(ev => {
+          const li = document.createElement("li");
+          li.textContent = ev;
+          evidenceList.appendChild(li);
+        });
+      } else {
+        evidenceList.innerHTML = "<li>No critical evidence triggers recorded.</li>";
+      }
+
+      // URL list
+      const urlContainer = document.getElementById("detailUrlContainer");
+      urlContainer.innerHTML = "";
+      if (data.urls_analyzed && data.urls_analyzed.length > 0) {
+        data.urls_analyzed.forEach(u => {
+          const card = document.createElement("div");
+          card.className = "url-card";
+          let flagsHtml = "";
+          if (u.flags && u.flags.length > 0) {
+            flagsHtml = `<ul class="url-flags-list">${u.flags.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>`;
+          } else {
+            flagsHtml = `<span style="color: #6ee7b7; font-size: 0.75rem;">Standard domain format (No high-risk flags)</span>`;
+          }
+
+          card.innerHTML = `
+            <div class="url-text">🔗 ${escapeHtml(u.url)}</div>
+            <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 4px;">
+              Domain: <strong>${escapeHtml(u.domain)}</strong> | Protocol: <strong>${u.is_https ? "HTTPS (Encrypted)" : "HTTP (Insecure)"}</strong> | Link Score: <strong>${u.url_score}/100</strong>
+            </div>
+            ${flagsHtml}
+          `;
+          urlContainer.appendChild(card);
+        });
+      } else {
+        urlContainer.innerHTML = "<p style='color: #9ca3af; font-size: 0.85rem;'>No external hyperlinks detected in this message.</p>";
+      }
+
+      // Snippet
+      document.getElementById("detailSnippet").textContent = data.snippet || "No snippet preview available.";
+
+      // Recommendations
+      const recList = document.getElementById("detailRecommendationsList");
+      recList.innerHTML = "";
+      if (data.recommendations && data.recommendations.length > 0) {
+        data.recommendations.forEach(rec => {
+          const li = document.createElement("li");
+          li.textContent = rec;
+          recList.appendChild(li);
+        });
+      } else {
+        recList.innerHTML = "<li>Continue standard caution when handling unexpected communications.</li>";
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      const icon = type === "success" ? "✅" : (type === "error" ? "🚨" : "ℹ️");
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>

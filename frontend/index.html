@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield — Intelligent Phishing & Scam Defense</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="shield-icon">🛡️</div>
+        <div>
+          <h1 class="logo-title">CyberShield</h1>
+          <p class="logo-subtitle">Proactive Scam & Phishing Detection Assistant</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="gmailStatusBadge" class="status-badge disconnected">
+          <span class="status-dot"></span>
+          <span id="gmailStatusText">Gmail Disconnected</span>
+        </div>
+        <button id="connectGmailBtn" class="btn btn-secondary">
+          <span class="btn-icon">🔗</span> Connect Gmail
+        </button>
+        <button id="scanInboxBtn" class="btn btn-primary" disabled>
+          <span class="btn-icon">⚡</span> Scan Inbox Now
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Value Proposition Banner -->
+    <div class="hero-banner">
+      <div class="hero-text">
+        <h2>Automated Threat Intelligence for Your Inbox</h2>
+        <p>CyberShield proactively inspects incoming Gmail messages, extracts embedded links, correlates threat signals, and gives you transparent evidence and safety steps.</p>
+      </div>
+      <div class="hero-tagline">
+        <span class="pulse-indicator"></span> Live Protection Engine
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total">📊</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Messages Scanned</span>
+          <h3 id="statTotal" class="stat-value">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon high">🚨</div>
+        <div class="stat-info">
+          <span class="stat-label">High Risk Threats</span>
+          <h3 id="statHigh" class="stat-value text-high">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon medium">⚠️</div>
+        <div class="stat-info">
+          <span class="stat-label">Medium Risk Warnings</span>
+          <h3 id="statMedium" class="stat-value text-medium">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon low">✅</div>
+        <div class="stat-info">
+          <span class="stat-label">Clean / Low Risk</span>
+          <h3 id="statLow" class="stat-value text-low">0</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="gmailTab">
+        📬 Automated Gmail Threat Feed
+      </button>
+      <button class="tab-btn" data-tab="manualTab">
+        🔍 Manual Threat Inspector
+      </button>
+      <button class="tab-btn" data-tab="historyTab">
+        📜 All Scan History
+      </button>
+    </div>
+
+    <!-- TAB 1: Automated Gmail Threat Feed -->
+    <div id="gmailTab" class="tab-content active">
+      <div class="section-header">
+        <div>
+          <h3>Recent Inbox Threat Analysis</h3>
+          <p class="section-desc">Automated analysis of recent incoming Gmail communications.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <label class="warning-toggle-label" title="Enable/disable alerts for suspicious emails with risk score between 50 and 70">
+            <input type="checkbox" id="suspiciousAlertToggle" checked>
+            <span class="toggle-track"><span class="toggle-knob"></span></span>
+            <span class="toggle-text">⚠️ Warn on Suspicious (50–70)</span>
+          </label>
+          <div class="filter-group">
+            <label>Filter by Risk:</label>
+            <select id="filterRiskSelect" class="select-input">
+              <option value="ALL">All Levels</option>
+              <option value="HIGH">High Risk Only</option>
+              <option value="MEDIUM">Medium Risk Only</option>
+              <option value="LOW">Low Risk Only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gmail Not Connected Alert -->
+      <div id="gmailPromptCard" class="card empty-state-card">
+        <div class="empty-icon">📬</div>
+        <h4>Connect Your Gmail Account to Start Proactive Defense</h4>
+        <p>CyberShield requires read-only Gmail authorization to proactively monitor incoming threats and embedded URLs.</p>
+        <button id="promptConnectBtn" class="btn btn-primary" style="margin-top: 15px;">
+          Connect Gmail with Google OAuth
+        </button>
+      </div>
+
+      <!-- Threat List Container -->
+      <div id="threatListContainer" class="threat-list" style="display: none;">
+        <!-- Dynamic Cards Inserted by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: Manual Threat Inspector -->
+    <div id="manualTab" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h3>Manual Text & URL Inspector</h3>
+          <p class="section-desc">Test custom messages, suspicious links, or raw email snippets.</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="form-group">
+          <label>Content Type</label>
+          <div class="radio-toggle">
+            <label><input type="radio" name="manualType" value="email" checked> Full Email Text</label>
+            <label><input type="radio" name="manualType" value="url"> Suspicious URL</label>
+            <label><input type="radio" name="manualType" value="text"> SMS / Message</label>
+          </div>
+        </div>
+
+        <div class="form-group" id="manualSenderGroup">
+          <label for="manualSender">Sender Header (Optional)</label>
+          <input type="text" id="manualSender" class="text-input" placeholder="e.g. Bank Security Team <support@gmail.com>">
+        </div>
+
+        <div class="form-group" id="manualSubjectGroup">
+          <label for="manualSubject">Subject Line (Optional)</label>
+          <input type="text" id="manualSubject" class="text-input" placeholder="e.g. URGENT: Your account will be blocked">
+        </div>
+
+        <div class="form-group">
+          <label for="manualContent">Message Body or Suspicious URL</label>
+          <textarea id="manualContent" class="textarea-input" rows="5" placeholder="Paste full email text, SMS body, or URL here..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button id="runManualAnalysisBtn" class="btn btn-primary">
+            Analyze Threats & Links
+          </button>
+          <button id="loadSampleScamBtn" class="btn btn-secondary">
+            Load Sample Phishing Scam
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: All Scan History -->
+    <div id="historyTab" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h3>Scan Audit Log</h3>
+          <p class="section-desc">Persistent history of all scanned emails and URLs.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="refreshHistoryBtn" class="btn btn-secondary">
+            🔄 Refresh
+          </button>
+          <button id="clearHistoryBtn" class="btn btn-secondary" style="color: #f87171;">
+            🗑️ Clear History
+          </button>
+        </div>
+      </div>
+      <div id="historyTableContainer" class="card table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Risk Level</th>
+              <th>Score</th>
+              <th>Subject / Title</th>
+              <th>Sender</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Dynamic Rows Inserted by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Threat Detail Modal -->
+  <div id="threatModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span id="modalRiskBadge" class="risk-pill high">HIGH RISK</span>
+          <h3 id="modalSubject">Threat Investigation Details</h3>
+        </div>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Risk Score Banner -->
+        <div id="modalScoreBanner" class="score-banner high">
+          <div class="score-number-box">
+            <span id="modalScoreVal" class="score-number">90</span>
+            <span class="score-denom">/ 100</span>
+          </div>
+          <div class="score-desc">
+            <h4 id="modalRiskLevelHeading">HIGH RISK DETECTED</h4>
+            <p id="modalRiskSummary">Multiple severe scam and credential harvesting indicators were identified.</p>
+          </div>
+        </div>
+
+        <!-- Sender & Message Meta -->
+        <div class="meta-box">
+          <div><strong>Sender:</strong> <span id="modalSender">Unknown</span></div>
+          <div><strong>Date:</strong> <span id="modalDate">N/A</span></div>
+          <div id="modalSnippetRow"><strong>Preview:</strong> <span id="modalSnippet">...</span></div>
+        </div>
+
+        <!-- Section: Why is this suspicious? -->
+        <div class="analysis-section">
+          <h4 class="section-title">
+            <span class="section-icon">⚠️</span> WHY IS THIS SUSPICIOUS? (Evidence)
+          </h4>
+          <ul id="modalEvidenceList" class="evidence-list">
+            <!-- Injected via JS -->
+          </ul>
+        </div>
+
+        <!-- Section: Link Analysis -->
+        <div class="analysis-section">
+          <h4 class="section-title">
+            <span class="section-icon">🔗</span> EXTRACTED LINK & DOMAIN ANALYSIS
+          </h4>
+          <div id="modalUrlList" class="url-analysis-container">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Section: Recommended Actions -->
+        <div class="analysis-section recommendations-box">
+          <h4 class="section-title text-success">
+            <span class="section-icon">🛡️</span> WHAT SHOULD YOU DO? (Safe Actions)
+          </h4>
+          <ul id="modalRecommendationsList" class="recommendations-list">
+            <!-- Injected via JS -->
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modalCloseBtn" class="btn btn-secondary">Close</button>
+        <button id="reportScamBtn" class="btn btn-danger">🚨 Report Scam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
