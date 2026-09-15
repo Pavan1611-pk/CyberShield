@@ -1,7 +1,7 @@
 ﻿# 🛡️ CyberShield — Intelligent Phishing & Scam Detection Assistant
 
 > **Proactive, Explainable Threat Detection for Gmail & Digital Communications**  
-> Built for the 24-Hour Hackathon | Round 2 Proactive Defense Prototype
+> Built for the 24-Hour Hackathon 
 
 ---
 
