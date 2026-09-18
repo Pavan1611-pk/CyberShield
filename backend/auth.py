@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import os
 import hashlib
 import hmac
+import re
 
 # Security configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "cybershield-hackathon-super-secret-jwt-key-2026")
@@ -60,3 +61,16 @@ def get_current_user_optional(
         return payload
     except JWTError:
         return None
+
+def validate_password_strength(password: str):
+    if len(password) < 8:
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"\d", password):
+        return False
+                    
+return True
+
