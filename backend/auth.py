@@ -60,5 +60,3 @@ def get_current_user_optional(
         return payload
     except JWTError:
         return None
-
-def ddhvhsvvdvdv
